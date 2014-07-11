@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
         // Clear text area
         text_area.setText("");
 
+        //must split string up into 20 byte chunks
         for(int i=0; i<length; i++){
             Log.d("MainActivity", "sendData...going to send message string \"" + str.substring(i*20,(i+1)*20) + "\"");
         }
@@ -38,11 +39,13 @@ public class MainActivity extends Activity {
     }
 
     public void sendTime(View v){
+        //send time as a string, must be hours,minutes, and seconds. All values must be plus one, since we can have 0 values
+        //(CANNOT HAVE!!!)
         Calendar c = Calendar.getInstance();
         int seconds = c.get(Calendar.SECOND);
         int minutes = c.get(Calendar.MINUTE);
         int hours = c.get(Calendar.HOUR_OF_DAY);
-        byte[] valuesToSend = new byte[]{(byte) hours, (byte) minutes, (byte)(seconds+1) };
+        byte[] valuesToSend = new byte[]{(byte) hours+1, (byte) minutes+1, (byte)(seconds+1) };
         Log.d("MainActivity", "sendData...going to send date string \"" +valuesToSend[0]+valuesToSend[1]+valuesToSend[2] + "\"");
 
     }
