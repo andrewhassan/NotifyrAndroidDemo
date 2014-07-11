@@ -2,6 +2,7 @@ package com.andrewhassan.notifyrdemoapp;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,6 +14,11 @@ public class MainActivity extends Activity {
     public void sendData(View view) {
         EditText text_area = (EditText)this.findViewById(R.id.editText);
         String str = text_area.getText().toString();
+
+        // Clear text area
+        text_area.setText("");
+
+        Log.d("MainActivity", "sendData...going to send string \"" + str + "\"");
 
         // Initialize BT connection
         // Send str using BT interface
