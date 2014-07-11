@@ -26,3 +26,20 @@ Once you're in master, you're gonna make a new branch. All of your changes will 
 `your_branch_name` should match the name that you entered before, although I don't think it matters too much. Now the code is on Github. If you go on Github into the repository, you'll see a "Create Pull Request" button. Just click that and it'll make a pull request for your branch.
 
 Everyone in the project will be able to review and when we're ready, we simply click merge and your code will be merged into the `master` branch.
+
+## Code Style ##
+
+Right now, we don't have any automated tools to enforce code style, so here an example of the code style we should use:
+
+```
+public class ClassName { // upper camel case for class names
+  public static void thisIsAFunction() { // lower camel case for method names
+    int this_is_a_variable; // underscores for variable names
+  }
+  
+  public static void thisFunctionHasManyParameters(int x, // multiline parameters for long method signatures
+    int y,
+    String z) {
+    ...
+  }
+}
