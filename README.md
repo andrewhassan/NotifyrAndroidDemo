@@ -33,6 +33,9 @@ Right now, we don't have any automated tools to enforce code style, so here an e
 
 ```java
 public class ClassName { // upper camel case for class names
+  public int blah;
+  private int m_blah; // Private variables are prefixed with 'm_'
+
   public static void thisIsAFunction() { // lower camel case for method names
     int this_is_a_variable; // underscores for variable names
   }
