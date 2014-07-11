@@ -1,6 +1,9 @@
 package com.andrewhassan.notifyrdemoapp;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -10,6 +13,8 @@ import android.widget.EditText;
 
 
 public class MainActivity extends Activity {
+
+    private BluetoothAdapter m_bt_adapter;
 
     public void sendData(View view) {
         EditText text_area = (EditText)this.findViewById(R.id.editText);
@@ -28,6 +33,9 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        BluetoothManager bt_manager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        m_bt_adapter = bt_manager.getAdapter();
     }
 
 
@@ -40,13 +48,18 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // If BT isn't supported or turned off
+        if (m_bt_adapter == null || !m_bt_adapter.isEnabled()) {
+            Intent enable_bt_intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivity(enable_bt_intent);
+            if (m_bt_adapter == null) finish();
+        }
     }
 }
