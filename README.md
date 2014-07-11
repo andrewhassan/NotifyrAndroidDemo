@@ -31,7 +31,7 @@ Everyone in the project will be able to review and when we're ready, we simply c
 
 Right now, we don't have any automated tools to enforce code style, so here an example of the code style we should use:
 
-```
+```java
 public class ClassName { // upper camel case for class names
   public static void thisIsAFunction() { // lower camel case for method names
     int this_is_a_variable; // underscores for variable names
