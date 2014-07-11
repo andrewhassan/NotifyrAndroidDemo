@@ -5,12 +5,17 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 
 
 public class MainActivity extends Activity {
 
     public void sendData(View view) {
-        System.out.println(view.toString());
+        EditText text_area = (EditText)this.findViewById(R.id.editText);
+        String str = text_area.getText().toString();
+
+        // Initialize BT connection
+        // Send str using BT interface
     }
 
     @Override
