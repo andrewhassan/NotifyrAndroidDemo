@@ -11,6 +11,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+import java.util.Calendar;
+import java.util.Date;
+
 
 public class MainActivity extends Activity {
 
@@ -19,14 +22,32 @@ public class MainActivity extends Activity {
     public void sendData(View view) {
         EditText text_area = (EditText)this.findViewById(R.id.editText);
         String str = text_area.getText().toString();
+        int length = str.length()/20;
+
 
         // Clear text area
         text_area.setText("");
 
-        Log.d("MainActivity", "sendData...going to send string \"" + str + "\"");
+        //must split string up into 20 byte chunks
+        for(int i=0; i<length; i++){
+            Log.d("MainActivity", "sendData...going to send message string \"" + str.substring(i*20,(i+1)*20) + "\"");
+        }
 
+        Log.d("MainActivity", "sendData...going to send message string \"" + str.substring(length*20) + "\"");
         // Initialize BT connection
         // Send str using BT interface
+    }
+
+    public void sendTime(View v){
+        //send time as a string, must be hours,minutes, and seconds. All values must be plus one, since we can have 0 values
+        //(CANNOT HAVE!!!)
+        Calendar c = Calendar.getInstance();
+        int seconds = c.get(Calendar.SECOND);
+        int minutes = c.get(Calendar.MINUTE);
+        int hours = c.get(Calendar.HOUR_OF_DAY);
+        byte[] valuesToSend = new byte[]{(byte) hours+1, (byte) minutes+1, (byte)(seconds+1) };
+        Log.d("MainActivity", "sendData...going to send date string \"" +valuesToSend[0]+valuesToSend[1]+valuesToSend[2] + "\"");
+
     }
 
     @Override
