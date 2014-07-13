@@ -9,7 +9,7 @@ Service UUID : `F9266FD7-EF07-45D6-8EB6-BD74F13620F9`
 
 Messages are sent as strings of up to 250 bytes, and with 0 values disallowed (actual 0 value bytes are used as string terminators device-side). If we change over to regular Bluetooth, this limit may be removed.
 
- ## Commands ##
+## Commands ##
  
 The 2 commands currently available are : 
 
