@@ -5,10 +5,16 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -18,30 +24,47 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 
 public class MainActivity extends Activity {
 
 
-    private ArrayList<BluetoothDevice> m_devices;
+    private HashMap<String,BluetoothDevice> m_devices;
     private DeviceAdapter m_names;
 
     private ProgressDialog barProgressDialog;
 
     private BluetoothAdapter m_bt_adapter;
+    private BluetoothGatt mBluetoothGatt;
+
     private Handler m_handler;
     private boolean m_running;
+    SharedPreferences prefs;
 
-    private static final String TAG = "NOTIFYR-APP";
+    private static final UUID NOTIFYR_SERVICE = UUID.fromString("F9266FD7-EF07-45D6-8EB6-BD74F13620F9");
+    private static final UUID TX_MSG = UUID.fromString("E788D73B-E793-4D9E-A608-2F2BAFC59A00");
+    private static final UUID TX_DONE = UUID.fromString("2f7f24f2-0301-11e4-93b1-b2227cce2b54");
+
+    private static final String STORED_ADDRESS = "STORED_ADDRESS";
+    private static final String TAG = "NOTIFYR_APP";
     private static final long SCAN_PERIOD = 3000;
 
+    private boolean sendDoneFlag = false;
+
     public void sendData(View view) {
+        BluetoothGattService notifyrService;
+        BluetoothGattCharacteristic txCharacteristic;
+        BluetoothGattCharacteristic doneCharacteristic;
+
+        ByteBuffer buf = ByteBuffer.allocate(1024);
+        byte outputValue[];
         EditText text_area = (EditText) this.findViewById(R.id.editText);
         String str = text_area.getText().toString();
         int length = str.length() / 20;
@@ -49,25 +72,65 @@ public class MainActivity extends Activity {
         // Clear text area
         text_area.setText("");
 
-        //must split string up into 20 byte chunks
-        for (int i = 0; i < length; i++) {
-            Log.d("MainActivity", "sendData...going to send message string \"" + str.substring(i * 20, (i + 1) * 20) + "\"");
+        //create byte string
+        buf.put((byte) 0x01);
+        buf.put(str.getBytes());
+        outputValue = buf.array();
+
+
+        BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(STORED_ADDRESS, ""));
+        if (device != null && mBluetoothGatt != null) {
+            notifyrService = mBluetoothGatt.getService(NOTIFYR_SERVICE);
+            txCharacteristic = notifyrService.getCharacteristic(TX_MSG);
+            doneCharacteristic = notifyrService.getCharacteristic(TX_DONE);
+            if(txCharacteristic != null && doneCharacteristic != null){
+                //must split string up into 20 byte chunks
+                sendDoneFlag = false;
+                for (int i = 0; i < length; i++) {
+
+                    Log.d("MainActivity", "sendData...going to send message string \"" +  new String(Arrays.copyOfRange(outputValue,i * 20,(i + 1) * 20)) + "\"");
+                    txCharacteristic.setValue(Arrays.copyOfRange(outputValue,i * 20,(i + 1) * 20));
+                    mBluetoothGatt.writeCharacteristic(txCharacteristic);
+
+                }
+
+                Log.d("MainActivity", "sendData...going to send message string \"" + new String(Arrays.copyOfRange(outputValue,length*20, str.length()+1)) + "\"");
+                sendDoneFlag = true;
+                txCharacteristic.setValue(Arrays.copyOfRange(outputValue, length * 20,str.length()+1));
+                mBluetoothGatt.writeCharacteristic(txCharacteristic);
+            }
         }
 
-        Log.d("MainActivity", "sendData...going to send message string \"" + str.substring(length * 20) + "\"");
         // Initialize BT connection
         // Send str using BT interface
     }
 
     public void sendTime(View v) {
+        BluetoothGattService notifyrService;
+        BluetoothGattCharacteristic txCharacteristic;
+        BluetoothGattCharacteristic doneCharacteristic;
         //send time as a string, must be hours,minutes, and seconds. All values must be plus one, since we can have 0 values
         //(CANNOT HAVE!!!)
         Calendar c = Calendar.getInstance();
         int seconds = c.get(Calendar.SECOND);
         int minutes = c.get(Calendar.MINUTE);
         int hours = c.get(Calendar.HOUR_OF_DAY);
-        byte[] valuesToSend = new byte[]{(byte) (hours + 1), (byte) (minutes + 1), (byte) (seconds + 1)};
-        Log.d("MainActivity", "sendData...going to send date string \"" + valuesToSend[0] + valuesToSend[1] + valuesToSend[2] + "\"");
+        byte[] valuesToSend = new byte[]{0x02,(byte) (hours + 1), (byte) (minutes + 1), (byte) (seconds + 1)};
+
+        BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(STORED_ADDRESS, ""));
+
+        if (device != null && mBluetoothGatt != null) {
+            notifyrService = mBluetoothGatt.getService(NOTIFYR_SERVICE);
+            txCharacteristic = notifyrService.getCharacteristic(TX_MSG);
+            doneCharacteristic = notifyrService.getCharacteristic(TX_DONE);
+            if(txCharacteristic != null && doneCharacteristic != null){
+                //must split string up into 20 byte chunks
+                Log.d("MainActivity", "sendData...going to send date string \"" + valuesToSend[0] + valuesToSend[1] + valuesToSend[2] + valuesToSend[3] + "\"");
+                sendDoneFlag = true;
+                txCharacteristic.setValue(valuesToSend);
+                mBluetoothGatt.writeCharacteristic(txCharacteristic);
+            }
+        }
 
     }
 
@@ -79,7 +142,11 @@ public class MainActivity extends Activity {
         builder.setTitle("aaa").setAdapter(m_names, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
+                prefs.edit().putString(STORED_ADDRESS, m_devices.get(m_names.getItem(which)).getAddress()).apply();
+                BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(STORED_ADDRESS, ""));
+                if (device != null) {
+                    mBluetoothGatt = device.connectGatt(MainActivity.this, false, mGattCallback);
+                }
             }
         });
         builder.create().show();
@@ -88,6 +155,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefs = this.getSharedPreferences(TAG, Context.MODE_PRIVATE);
         setContentView(R.layout.activity_main);
         BluetoothManager bt_manager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         m_bt_adapter = bt_manager.getAdapter();
@@ -110,6 +178,7 @@ public class MainActivity extends Activity {
                 scanLeDevice(true);
                 return true;
             case R.id.forget_device:
+                prefs.edit().clear();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -139,7 +208,7 @@ public class MainActivity extends Activity {
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             m_names = new DeviceAdapter(MainActivity.this, android.R.layout.simple_list_item_1, new ArrayList<String>());
-            m_devices = new ArrayList<BluetoothDevice>();
+            m_devices = new HashMap<String, BluetoothDevice>();
 
             barProgressDialog = new ProgressDialog(MainActivity.this);
             barProgressDialog.setTitle("Searching for devices");
@@ -184,7 +253,7 @@ public class MainActivity extends Activity {
                 @Override
                 public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
                     Log.i(TAG, "Added device:" + device.getName());
-                    m_devices.add(device);
+                    m_devices.put(device.getName(), device);
                     m_names.add(device.getName());
                 }
             };
@@ -192,7 +261,7 @@ public class MainActivity extends Activity {
     private class DeviceAdapter extends ArrayAdapter<String> {
 
         public DeviceAdapter(Context context, int textViewResourceId,
-                                  List<String> objects) {
+                             List<String> objects) {
             super(context, textViewResourceId, objects);
         }
 
@@ -203,6 +272,40 @@ public class MainActivity extends Activity {
 
 
     }
+
+    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.i(TAG, "Connected to GATT server.");
+                Log.i(TAG, "Attempting to start service discovery:" +
+                        mBluetoothGatt.discoverServices());
+
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.i(TAG, "Disconnected from GATT server.");
+            }
+        }
+
+        @Override
+        // New services discovered
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS && gatt.getService(NOTIFYR_SERVICE)!= null) {
+                Log.i(TAG, "onServicesDiscovered received: " + status);
+            } else {
+                Log.w(TAG, "onServicesDiscovered received: " + status);
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            Log.i(TAG,characteristic.getUuid().toString());
+            if(sendDoneFlag) {
+                gatt.getService(NOTIFYR_SERVICE).getCharacteristic(TX_DONE).setValue(new byte[]{0x00});
+                mBluetoothGatt.writeCharacteristic(gatt.getService(NOTIFYR_SERVICE).getCharacteristic(TX_DONE));
+                sendDoneFlag = false;
+            }
+        }
+    };
 
 
 }
