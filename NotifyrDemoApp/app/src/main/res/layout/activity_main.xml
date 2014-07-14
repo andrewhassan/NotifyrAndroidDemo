@@ -38,9 +38,9 @@
         android:layout_height="wrap_content"
         android:text="@string/set_time"
         android:id="@+id/button"
-        android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/button2"
-        android:layout_alignParentLeft="true"
-        android:onClick="sendTime"/>
+        android:onClick="sendTime"
+        android:layout_below="@+id/button2"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true" />
 
 </RelativeLayout>
