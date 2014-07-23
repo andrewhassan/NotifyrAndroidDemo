@@ -17,7 +17,7 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
 
      private static BLEConnectionHandler sInstance;
 
-    private Object mLock = new Object();
+    private final Object mLock = new Object();
     private Queue<byte[]> mQueue = new LinkedBlockingDeque<byte[]>();
     private boolean isWriting = false;
 
@@ -48,10 +48,11 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
                  */
             Log.i(Constants.TAG, "Disconnected from GATT server.");
         } else if (status != BluetoothGatt.GATT_SUCCESS) {
-                /*
-                 * If there is a failure at any stage, simply disconnect
-                 */
-            gatt.disconnect();
+            mQueue.clear();
+            synchronized (mLock){
+                isWriting = false;
+            }
+            gatt.close();
         }
     }
 
@@ -117,10 +118,10 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
             return;
         }
 
-        if(mQueue.peek()[0] != 0x00){
+        if(!mQueue.isEmpty() && mQueue.peek()[0] != 0x00){
             gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG).setValue(mQueue.remove());
             gatt.writeCharacteristic(gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG));
-        }else {
+        }else if(!mQueue.isEmpty() && mQueue.peek()[0] == 0x00) {
             gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE).setValue(mQueue.remove());
             gatt.writeCharacteristic(gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE));
         }
