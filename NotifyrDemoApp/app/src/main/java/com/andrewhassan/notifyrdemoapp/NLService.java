@@ -8,7 +8,9 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.text.Normalizer;
 
 /**
  * Created by Applepie on 7/18/2014.
@@ -22,11 +24,17 @@ public class NLService extends NotificationListenerService{
         byte outputValue[];
         String address = getApplicationContext().getSharedPreferences(Constants.TAG, Context.MODE_PRIVATE).getString(Constants.STORED_ADDRESS, "");
         if(sbn.isClearable()){
-            String msg;
-            if(sbn.getNotification().tickerText != null){
-                msg = sbn.getNotification().tickerText.toString();
-            } else{
-                msg = "A message has arrived!";
+            String msg = "A message has arrived!";
+            try {
+                if(sbn.getNotification().tickerText != null){
+                    msg = sbn.getNotification().tickerText.toString();
+                } else{
+                    msg = "A message has arrived!";
+                }
+                msg = Normalizer.normalize(msg, Normalizer.Form.NFD);
+                msg = new String(msg.getBytes("ascii"), "ascii");
+            } catch (UnsupportedEncodingException e) {
+                return;
             }
 
             Log.i(Constants.TAG, "Writing msg " + msg + "to " + address);
