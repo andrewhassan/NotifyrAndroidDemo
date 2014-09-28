@@ -120,9 +120,11 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
 
         if(!mQueue.isEmpty() && mQueue.peek()[0] != 0x00){
             gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG).setValue(mQueue.remove());
+            gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG).setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             gatt.writeCharacteristic(gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG));
         }else if(!mQueue.isEmpty() && mQueue.peek()[0] == 0x00) {
             gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE).setValue(mQueue.remove());
+            gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE).setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             gatt.writeCharacteristic(gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE));
         }
     }
