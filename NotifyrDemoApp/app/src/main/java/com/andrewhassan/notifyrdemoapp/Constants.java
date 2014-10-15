@@ -7,9 +7,9 @@ import java.util.UUID;
  */
 public class Constants {
 
-    public static final UUID NOTIFYR_SERVICE = UUID.fromString("F9266FD7-EF07-45D6-8EB6-BD74F13620F9");
-    public static final UUID TX_MSG = UUID.fromString("E788D73B-E793-4D9E-A608-2F2BAFC59A00");
-    public static final UUID TX_DONE = UUID.fromString("2f7f24f2-0301-11e4-93b1-b2227cce2b54");
+    public static final UUID NOTIFYR_SERVICE = UUID.fromString("F99F6A53-3A17-403C-B137-372E3330BC72");
+    public static final UUID TX_MSG = UUID.fromString("287304EE-7141-4CF3-9F08-EE6FC7294F92");
+    public static final UUID RX_MSG = UUID.fromString("4585C102-7784-40B4-88E1-3CB5C4FD37A3");
 
     public static final String NOTIFYR_NAME = "Notifyr";
     public static final String STORED_ADDRESS = "STORED_ADDRESS";
