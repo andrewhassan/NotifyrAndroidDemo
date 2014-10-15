@@ -5,12 +5,9 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,14 +23,9 @@ import android.widget.EditText;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
 
 public class MainActivity extends Activity {
@@ -64,7 +56,9 @@ public class MainActivity extends Activity {
         String str = text_area.getText().toString();
         // Clear text area
         text_area.setText("");
-
+        if (str.length() > 200) {
+            str = str.substring(0, 200) + "...";
+        }
         //create byte string
         buf.put((byte) 0x01);
         buf.put(str.getBytes());
@@ -72,7 +66,8 @@ public class MainActivity extends Activity {
 
         BLEConnectionHandler.getInstance().writeMessage(outputValue,str.length()+1);
         BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(Constants.STORED_ADDRESS, ""));
-        if(device != null && !BLEConnectionHandler.getInstance().getWriting()) {
+        Log.i(Constants.TAG, "is writing? " + BLEConnectionHandler.getInstance().getWriting());
+        if (device != null) {
             BLEConnectionHandler.getInstance().setWriting(true);
             device.connectGatt(this, false, BLEConnectionHandler.getInstance());
         }
@@ -94,7 +89,7 @@ public class MainActivity extends Activity {
 
         BLEConnectionHandler.getInstance().writeMessage(outputValue,outputValue.length);
         BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(Constants.STORED_ADDRESS, ""));
-        if(device != null && !BLEConnectionHandler.getInstance().getWriting()) {
+        if (device != null) {
             BLEConnectionHandler.getInstance().setWriting(true);
             device.connectGatt(this, false, BLEConnectionHandler.getInstance());
         }

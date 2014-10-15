@@ -33,6 +33,9 @@ public class NLService extends NotificationListenerService{
                 }
                 msg = Normalizer.normalize(msg, Normalizer.Form.NFD);
                 msg = new String(msg.getBytes("ascii"), "ascii");
+                if (msg.length() > 200) {
+                    msg = msg.substring(0, 200) + "...";
+                }
             } catch (UnsupportedEncodingException e) {
                 return;
             }
@@ -47,7 +50,8 @@ public class NLService extends NotificationListenerService{
             BLEConnectionHandler.getInstance().writeMessage(outputValue,msg.length()+1);
 
             BluetoothDevice device = m_bt_adapter.getRemoteDevice(address);
-            if (device != null && !BLEConnectionHandler.getInstance().getWriting()) {
+            Log.i(Constants.TAG, "is writing? " + BLEConnectionHandler.getInstance().getWriting());
+            if (device != null) {
                 BLEConnectionHandler.getInstance().setWriting(true);
                 device.connectGatt(this, false, BLEConnectionHandler.getInstance());
             }

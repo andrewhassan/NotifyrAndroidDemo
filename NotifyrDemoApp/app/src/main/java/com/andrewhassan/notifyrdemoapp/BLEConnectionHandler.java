@@ -74,6 +74,7 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
         if(status == BluetoothGatt.GATT_SUCCESS) {
             writeQueue(gatt);
         } else{
+            mQueue.clear();
             synchronized (mLock){
                 isWriting = false;
             }
@@ -98,11 +99,13 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
             mQueue.add(Arrays.copyOfRange(message, i * 20, (i + 1) * 20));
         }
         mQueue.add(Arrays.copyOfRange(message, numOfMessages * 20, length));
+
         mQueue.add(new byte[]{0x00});
     }
 
     private void writeQueue(BluetoothGatt gatt) {
         if(gatt.getService(Constants.NOTIFYR_SERVICE) == null){
+            mQueue.clear();
             synchronized (mLock){
                 isWriting = false;
             }
@@ -118,14 +121,9 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
             return;
         }
 
-        if(!mQueue.isEmpty() && mQueue.peek()[0] != 0x00){
+        if (!mQueue.isEmpty()) {
             gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG).setValue(mQueue.remove());
-            gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG).setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             gatt.writeCharacteristic(gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG));
-        }else if(!mQueue.isEmpty() && mQueue.peek()[0] == 0x00) {
-            gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE).setValue(mQueue.remove());
-            gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE).setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
-            gatt.writeCharacteristic(gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_DONE));
         }
     }
 }
