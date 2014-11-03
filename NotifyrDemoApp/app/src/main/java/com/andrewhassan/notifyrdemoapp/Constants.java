@@ -14,5 +14,6 @@ public class Constants {
     public static final String NOTIFYR_NAME = "Notifyr";
     public static final String STORED_ADDRESS = "STORED_ADDRESS";
     public static final String TAG = "NOTIFYR_APP";
+    public static final String FILTERED_APPS = "FILTERED_APPS";
     public static final long SCAN_PERIOD = 3000;
 }

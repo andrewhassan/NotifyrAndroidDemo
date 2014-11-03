@@ -15,6 +15,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class BLEConnectionHandler extends BluetoothGattCallback {
 
+    //TODO: WTF is this not a service??? We need it for notifications from the device!
      private static BLEConnectionHandler sInstance;
 
     private final Object mLock = new Object();
@@ -59,6 +60,7 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
     @Override
     // New services discovered
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+
         if (status == BluetoothGatt.GATT_SUCCESS && gatt.getService(Constants.NOTIFYR_SERVICE)!= null) {
             Log.i(Constants.TAG, "onServicesDiscovered received: " + status);
             writeQueue(gatt);

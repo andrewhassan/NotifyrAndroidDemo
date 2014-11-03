@@ -11,6 +11,7 @@ import android.util.Log;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.text.Normalizer;
+import java.util.HashSet;
 
 /**
  * Created by Applepie on 7/18/2014.
@@ -20,9 +21,14 @@ public class NLService extends NotificationListenerService{
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
+        if (getApplicationContext().getSharedPreferences(Constants.TAG, Context.MODE_PRIVATE).getStringSet(Constants.FILTERED_APPS, new HashSet<String>()).contains(sbn.getPackageName())) {
+            return;
+        }
+
         ByteBuffer buf = ByteBuffer.allocate(1024);
         byte outputValue[];
         String address = getApplicationContext().getSharedPreferences(Constants.TAG, Context.MODE_PRIVATE).getString(Constants.STORED_ADDRESS, "");
+
         if(sbn.isClearable()){
             String msg = "A message has arrived!";
             try {
