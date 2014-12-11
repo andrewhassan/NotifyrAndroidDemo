@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,21 +62,15 @@ public class MainActivity extends Activity {
         buf.put(str.getBytes());
         outputValue = buf.array();
 
-        BLEConnectionHandler.getInstance().writeMessage(outputValue,str.length()+1);
-        BluetoothDevice device = mBtAdapter.getRemoteDevice(mPrefs.getString(Constants.STORED_ADDRESS, ""));
-        Log.i(Constants.TAG, "is writing? " + BLEConnectionHandler.getInstance().getWriting());
-        if (device != null) {
-            BLEConnectionHandler.getInstance().setWriting(true);
-            device.connectGatt(this, false, BLEConnectionHandler.getInstance());
-        }
-            // Initialize BT connection
-        // Send str using BT interface
+        Intent msgIntent = new Intent();
+        msgIntent.setAction(Constants.NOTIFYR_NOTIFICATION);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, outputValue);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, str.length() + 1);
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
     }
 
     public void sendTime(View v) {
-        BluetoothGattService notifyrService;
-        BluetoothGattCharacteristic txCharacteristic;
-        BluetoothGattCharacteristic doneCharacteristic;
         //send time as a string, must be hours,minutes, and seconds. All values must be plus one, since we can have 0 values
         //(CANNOT HAVE!!!)
         Calendar c = Calendar.getInstance();
@@ -84,13 +79,12 @@ public class MainActivity extends Activity {
         int hours = c.get(Calendar.HOUR_OF_DAY);
         byte[] outputValue = new byte[]{0x02,(byte) (hours + 1), (byte) (minutes + 1), (byte) (seconds + 1)};
 
+        Intent msgIntent = new Intent();
+        msgIntent.setAction(Constants.NOTIFYR_NOTIFICATION);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, outputValue);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, outputValue.length);
 
-        BLEConnectionHandler.getInstance().writeMessage(outputValue,outputValue.length);
-        BluetoothDevice device = mBtAdapter.getRemoteDevice(mPrefs.getString(Constants.STORED_ADDRESS, ""));
-        if (device != null) {
-            BLEConnectionHandler.getInstance().setWriting(true);
-            device.connectGatt(this, false, BLEConnectionHandler.getInstance());
-        }
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
 
     }
 
@@ -107,6 +101,7 @@ public class MainActivity extends Activity {
                 if (device != null) {
                     mPrefs.edit().putString(Constants.STORED_ADDRESS, mDevices.get(mNames.getItem(which)).getAddress()).apply();
                 }
+                invalidateOptionsMenu();
             }
         });
         builder.create().show();
@@ -127,6 +122,10 @@ public class MainActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        if (!mPrefs.contains(Constants.STORED_ADDRESS)) {
+            menu.findItem(R.id.start_service).setVisible(false);
+            menu.findItem(R.id.stop_service).setVisible(false);
+        }
         return true;
     }
 
@@ -139,10 +138,24 @@ public class MainActivity extends Activity {
                 return true;
             case R.id.forget_device:
                 mPrefs.edit().clear().commit();
+                invalidateOptionsMenu();
                 return true;
             case R.id.filter_apps:
-                Intent intent = new Intent(this, AppFilterActivity.class);
-                this.startActivity(intent);
+                Intent filterActivityIntent = new Intent(this, AppFilterActivity.class);
+                this.startActivity(filterActivityIntent);
+                return true;
+            case R.id.start_service:
+                Intent startServiceIntent = new Intent(this, BLEService.class);
+                startServiceIntent.setAction(Constants.NOTIFYR_START_BLE_SERVICE);
+                startService(startServiceIntent);
+                return true;
+
+            case R.id.stop_service:
+                Intent stopServiceIntent = new Intent(this, BLEService.class);
+                stopServiceIntent.setAction(Constants.NOTIFYR_STOP_BLE_SERVICE);
+                startService(stopServiceIntent);
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }

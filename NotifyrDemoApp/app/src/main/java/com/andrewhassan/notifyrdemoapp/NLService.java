@@ -1,11 +1,10 @@
 package com.andrewhassan.notifyrdemoapp;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.Intent;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
@@ -17,8 +16,6 @@ import java.util.HashSet;
  * Created by Applepie on 7/18/2014.
  */
 public class NLService extends NotificationListenerService{
-    private BluetoothAdapter m_bt_adapter;
-
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         if (getApplicationContext().getSharedPreferences(Constants.TAG, Context.MODE_PRIVATE).getStringSet(Constants.FILTERED_APPS, new HashSet<String>()).contains(sbn.getPackageName())) {
@@ -47,20 +44,16 @@ public class NLService extends NotificationListenerService{
             }
 
             Log.i(Constants.TAG, "Writing msg " + msg + "to " + address);
-            BluetoothManager bt_manager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-            m_bt_adapter = bt_manager.getAdapter();
             buf.put((byte) 0x01);
             buf.put( msg.getBytes());
             outputValue = buf.array();
 
-            BLEConnectionHandler.getInstance().writeMessage(outputValue,msg.length()+1);
+            Intent msgIntent = new Intent();
+            msgIntent.setAction(Constants.NOTIFYR_NOTIFICATION);
+            msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, outputValue);
+            msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, msg.length() + 1);
 
-            BluetoothDevice device = m_bt_adapter.getRemoteDevice(address);
-            Log.i(Constants.TAG, "is writing? " + BLEConnectionHandler.getInstance().getWriting());
-            if (device != null) {
-                BLEConnectionHandler.getInstance().setWriting(true);
-                device.connectGatt(this, false, BLEConnectionHandler.getInstance());
-            }
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
         }
     }
 
