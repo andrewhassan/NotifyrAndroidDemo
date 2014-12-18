@@ -1,7 +1,7 @@
 Notifyr Android Demo
 ====================
 
-This repository holds the Android application code for Praetzel's demo in 4A. The app simply has a textbox and a send button. When the button is pressed, the text from the text box will be sent and displayed on the Notifyr. The app will need to discover devices first, but then will have to remeber the Notifyr device to automatically connect after initial setup.
+This repository holds the Android application code for the final demo in 4B. The app has a textbox for entering messages directly to the screen, as well as time update. The app also uses a [NotificationListenerService](https://developer.android.com/reference/android/service/notification/NotificationListenerService.html) to send incoming notifications to the display. The app will need to discover devices first, but then will remeber the Notifyr device to automatically connect after initial setup.
 
 This application demos our ability to take input, send it to the device, and display it properly.
 
@@ -29,7 +29,7 @@ Everyone in the project will be able to review and when we're ready, we simply c
 
 ## Code Style ##
 
-Right now, we don't have any automated tools to enforce code style, so here an example of the code style we should use:
+~~ight now, we don't have any automated tools to enforce code style, so here an example of the code style we should use:~~ LOL screw that, use whatever you want( like who's gonna be looking at this anyways lol (no actually? Just use [this](https://google-styleguide.googlecode.com/svn/trunk/javaguide.html))
 
 ```java
 public class ClassName { // upper camel case for class names
