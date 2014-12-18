@@ -23,9 +23,9 @@ Once you're in master, you're gonna make a new branch. All of your changes will 
 
 `git push origin your_branch_name`
 
-`your_branch_name` should match the name that you entered before, although I don't think it matters too much. Now the code is on Github. If you go on Github into the repository, you'll see a "Create Pull Request" button. Just click that and it'll make a pull request for your branch.
+`your_branch_name` should match the name that you entered before, although I don't think it matters too much. Now the code is on Github. If you go on Github into the repository, you'll see a "Create Pull Request" button. ~~Just click that and it'll make a pull request for your branch.~~
 
-Everyone in the project will be able to review and when we're ready, we simply click merge and your code will be merged into the `master` branch.
+~~Everyone in the project will be able to review and when we're ready, we simply click merge and your code will be merged into the `master` branch.~~ Like anyone's gonna bother with that, moving too fast for dat shit.
 
 ## Code Style ##
 
