@@ -3,6 +3,7 @@ package com.andrewhassan.notifyrdemoapp;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.util.Log;
 
@@ -15,7 +16,8 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class BLEConnectionHandler extends BluetoothGattCallback {
 
-     private static BLEConnectionHandler sInstance;
+    //TODO: WTF is this not a service??? We need it for notifications from the device!
+    private static BLEConnectionHandler sInstance;
 
     private final Object mLock = new Object();
     private Queue<byte[]> mQueue = new LinkedBlockingDeque<byte[]>();
@@ -59,6 +61,7 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
     @Override
     // New services discovered
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+
         if (status == BluetoothGatt.GATT_SUCCESS && gatt.getService(Constants.NOTIFYR_SERVICE)!= null) {
             Log.i(Constants.TAG, "onServicesDiscovered received: " + status);
             writeQueue(gatt);
@@ -99,31 +102,34 @@ public class BLEConnectionHandler extends BluetoothGattCallback {
             mQueue.add(Arrays.copyOfRange(message, i * 20, (i + 1) * 20));
         }
         mQueue.add(Arrays.copyOfRange(message, numOfMessages * 20, length));
-
         mQueue.add(new byte[]{0x00});
     }
 
+    @Override
+    public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+
+    }
+
     private void writeQueue(BluetoothGatt gatt) {
-        if(gatt.getService(Constants.NOTIFYR_SERVICE) == null){
+        BluetoothGattService notifyrService = gatt.getService(Constants.NOTIFYR_SERVICE);
+        if (notifyrService == null) {
             mQueue.clear();
             synchronized (mLock){
                 isWriting = false;
             }
             return;
         }
-
         if(mQueue.isEmpty()){
             synchronized (mLock){
                 isWriting = false;
             }
+            gatt.setCharacteristicNotification(notifyrService.getCharacteristic(Constants.RX_MSG), true);
             gatt.disconnect();
             gatt.close();
             return;
-        }
-
-        if (!mQueue.isEmpty()) {
-            gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG).setValue(mQueue.remove());
-            gatt.writeCharacteristic(gatt.getService(Constants.NOTIFYR_SERVICE).getCharacteristic(Constants.TX_MSG));
+        } else {
+            notifyrService.getCharacteristic(Constants.TX_MSG).setValue(mQueue.remove());
+            gatt.writeCharacteristic(notifyrService.getCharacteristic(Constants.TX_MSG));
         }
     }
 }

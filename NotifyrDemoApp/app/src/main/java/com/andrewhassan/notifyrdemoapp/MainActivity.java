@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,19 +32,16 @@ import java.util.List;
 public class MainActivity extends Activity {
 
 
-    private HashMap<String,BluetoothDevice> m_devices;
-    private DeviceAdapter m_names;
+    private HashMap<String, BluetoothDevice> mDevices;
+    private DeviceAdapter mNames;
 
     private ProgressDialog barProgressDialog;
 
-    private BluetoothAdapter m_bt_adapter;
+    private BluetoothAdapter mBtAdapter;
 
-    private Handler m_handler;
-    private boolean m_running;
-    SharedPreferences prefs;
-
-
-
+    private Handler mHandler;
+    private boolean mRunning;
+    SharedPreferences mPrefs;
 
     public void sendData(View view) {
         BluetoothGattService notifyrService;
@@ -64,21 +62,15 @@ public class MainActivity extends Activity {
         buf.put(str.getBytes());
         outputValue = buf.array();
 
-        BLEConnectionHandler.getInstance().writeMessage(outputValue,str.length()+1);
-        BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(Constants.STORED_ADDRESS, ""));
-        Log.i(Constants.TAG, "is writing? " + BLEConnectionHandler.getInstance().getWriting());
-        if (device != null) {
-            BLEConnectionHandler.getInstance().setWriting(true);
-            device.connectGatt(this, false, BLEConnectionHandler.getInstance());
-        }
-            // Initialize BT connection
-        // Send str using BT interface
+        Intent msgIntent = new Intent();
+        msgIntent.setAction(Constants.NOTIFYR_NOTIFICATION);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, outputValue);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, str.length() + 1);
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
     }
 
     public void sendTime(View v) {
-        BluetoothGattService notifyrService;
-        BluetoothGattCharacteristic txCharacteristic;
-        BluetoothGattCharacteristic doneCharacteristic;
         //send time as a string, must be hours,minutes, and seconds. All values must be plus one, since we can have 0 values
         //(CANNOT HAVE!!!)
         Calendar c = Calendar.getInstance();
@@ -87,28 +79,29 @@ public class MainActivity extends Activity {
         int hours = c.get(Calendar.HOUR_OF_DAY);
         byte[] outputValue = new byte[]{0x02,(byte) (hours + 1), (byte) (minutes + 1), (byte) (seconds + 1)};
 
-        BLEConnectionHandler.getInstance().writeMessage(outputValue,outputValue.length);
-        BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(Constants.STORED_ADDRESS, ""));
-        if (device != null) {
-            BLEConnectionHandler.getInstance().setWriting(true);
-            device.connectGatt(this, false, BLEConnectionHandler.getInstance());
-        }
+        Intent msgIntent = new Intent();
+        msgIntent.setAction(Constants.NOTIFYR_NOTIFICATION);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, outputValue);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, outputValue.length);
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
 
     }
 
     public void showResults() {
-        if (m_names == null || m_names.isEmpty()) {
+        if (mNames == null || mNames.isEmpty()) {
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("aaa").setAdapter(m_names, new DialogInterface.OnClickListener() {
+        builder.setTitle("aaa").setAdapter(mNames, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                prefs.edit().putString(Constants.STORED_ADDRESS, m_devices.get(m_names.getItem(which)).getAddress()).apply();
-                BluetoothDevice device = m_bt_adapter.getRemoteDevice(prefs.getString(Constants.STORED_ADDRESS, ""));
+                mPrefs.edit().putString(Constants.STORED_ADDRESS, mDevices.get(mNames.getItem(which)).getAddress()).apply();
+                BluetoothDevice device = mBtAdapter.getRemoteDevice(mPrefs.getString(Constants.STORED_ADDRESS, ""));
                 if (device != null) {
-                    prefs.edit().putString(Constants.STORED_ADDRESS, m_devices.get(m_names.getItem(which)).getAddress()).apply();
+                    mPrefs.edit().putString(Constants.STORED_ADDRESS, mDevices.get(mNames.getItem(which)).getAddress()).apply();
                 }
+                invalidateOptionsMenu();
             }
         });
         builder.create().show();
@@ -117,11 +110,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        prefs = this.getSharedPreferences(Constants.TAG, Context.MODE_PRIVATE);
+        mPrefs = this.getSharedPreferences(Constants.TAG, Context.MODE_PRIVATE);
         setContentView(R.layout.activity_main);
         BluetoothManager bt_manager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-        m_bt_adapter = bt_manager.getAdapter();
-        m_handler = new Handler();
+        mBtAdapter = bt_manager.getAdapter();
+        mHandler = new Handler();
     }
 
 
@@ -129,6 +122,10 @@ public class MainActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        if (!mPrefs.contains(Constants.STORED_ADDRESS)) {
+            menu.findItem(R.id.start_service).setVisible(false);
+            menu.findItem(R.id.stop_service).setVisible(false);
+        }
         return true;
     }
 
@@ -140,8 +137,25 @@ public class MainActivity extends Activity {
                 scanLeDevice(true);
                 return true;
             case R.id.forget_device:
-                prefs.edit().clear();
+                mPrefs.edit().clear().commit();
+                invalidateOptionsMenu();
                 return true;
+            case R.id.filter_apps:
+                Intent filterActivityIntent = new Intent(this, AppFilterActivity.class);
+                this.startActivity(filterActivityIntent);
+                return true;
+            case R.id.start_service:
+                Intent startServiceIntent = new Intent(this, BLEService.class);
+                startServiceIntent.setAction(Constants.NOTIFYR_START_BLE_SERVICE);
+                startService(startServiceIntent);
+                return true;
+
+            case R.id.stop_service:
+                Intent stopServiceIntent = new Intent(this, BLEService.class);
+                stopServiceIntent.setAction(Constants.NOTIFYR_STOP_BLE_SERVICE);
+                startService(stopServiceIntent);
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -158,10 +172,10 @@ public class MainActivity extends Activity {
     protected void onResume(){
         super.onResume();
         // If BT isn't supported or turned off
-        if (m_bt_adapter == null || !m_bt_adapter.isEnabled()) {
+        if (mBtAdapter == null || !mBtAdapter.isEnabled()) {
             Intent enable_bt_intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enable_bt_intent);
-            if (m_bt_adapter == null) finish();
+            if (mBtAdapter == null) finish();
         }
     }
 
@@ -181,8 +195,8 @@ public class MainActivity extends Activity {
 
     private void scanLeDevice(final boolean enable) {
         if (enable) {
-            m_names = new DeviceAdapter(MainActivity.this, android.R.layout.simple_list_item_1, new ArrayList<String>());
-            m_devices = new HashMap<String, BluetoothDevice>();
+            mNames = new DeviceAdapter(MainActivity.this, android.R.layout.simple_list_item_1, new ArrayList<String>());
+            mDevices = new HashMap<String, BluetoothDevice>();
 
             barProgressDialog = new ProgressDialog(MainActivity.this);
             barProgressDialog.setTitle("Searching for devices");
@@ -192,11 +206,11 @@ public class MainActivity extends Activity {
             barProgressDialog.show();
 
             // Stops scanning after a pre-defined scan period.
-            m_handler.postDelayed(new Runnable() {
+            mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    m_running = false;
-                    m_bt_adapter.stopLeScan(mLeScanCallback);
+                    mRunning = false;
+                    mBtAdapter.stopLeScan(mLeScanCallback);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -209,14 +223,14 @@ public class MainActivity extends Activity {
                 }
             }, Constants.SCAN_PERIOD);
 
-            m_running = true;
-            m_bt_adapter.startLeScan(mLeScanCallback);
+            mRunning = true;
+            mBtAdapter.startLeScan(mLeScanCallback);
         } else {
             if (barProgressDialog != null) {
                 barProgressDialog.dismiss();
             }
-            m_running = false;
-            m_bt_adapter.stopLeScan(mLeScanCallback);
+            mRunning = false;
+            mBtAdapter.stopLeScan(mLeScanCallback);
         }
     }
 
@@ -227,9 +241,9 @@ public class MainActivity extends Activity {
                 @Override
                 public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
                     Log.i(Constants.TAG, "Added device:" + device.getName());
-                    if(!m_devices.containsKey(device.getName()) && device.getName().contains(Constants.NOTIFYR_NAME)) {
-                        m_devices.put(device.getName(), device);
-                        m_names.add(device.getName());
+                    if (!mDevices.containsKey(device.getName()) && device.getName().contains(Constants.NOTIFYR_NAME)) {
+                        mDevices.put(device.getName(), device);
+                        mNames.add(device.getName());
                     }
                 }
             };

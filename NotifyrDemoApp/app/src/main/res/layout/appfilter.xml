@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <AutoCompleteTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/appnametextentry"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:singleLine="false"
+        android:completionThreshold="1"
+        android:hint="@string/app_entry_hint" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add"
+        android:id="@+id/add_app_btn"
+        android:layout_below="@+id/appnametextentry"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Muted Apps"
+        android:id="@+id/txph1"
+        android:layout_below="@+id/add_app_btn"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/add_app_btn" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/muted_app_list"
+        android:layout_below="@+id/txph1"
+        android:layout_alignParentStart="true" />
+</RelativeLayout>
