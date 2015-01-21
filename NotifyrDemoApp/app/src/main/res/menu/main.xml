@@ -2,6 +2,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
     <item
+        android:id="@+id/start_service"
+        android:title="@string/start_service" />
+    <item
+        android:id="@+id/stop_service"
+        android:title="@string/stop_service" />
+    <item
         android:id="@+id/find_devices"
         android:title="@string/find_devices" />
     <item

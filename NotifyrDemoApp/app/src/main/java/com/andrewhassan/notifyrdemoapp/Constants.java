@@ -25,4 +25,27 @@ public class Constants {
     public static final String NOTIFYR_NOTIFICATION_MSG_LENGTH = "NOTIFYR_NOTIFICATION_MSG_LENGTH";
 
     public static final long SCAN_PERIOD = 3000;
+
+    public static final int SNAPCHAT_ICON = 1;
+    public static final int EMAIL_ICON = 2;
+    public static final int CHAT_ICON = 3;
+    public static final int PHONE_ICON = 4;
+
+    public static final DefaultHashMap<String, Integer> appIconMapping = new DefaultHashMap<String, Integer>() {
+        {
+            put("500px", SNAPCHAT_ICON);
+            put("Phone", PHONE_ICON);
+            put("Email", EMAIL_ICON);
+            put("EvolveSMS", CHAT_ICON);
+            put("Facebook", CHAT_ICON);
+            put("Gmail", EMAIL_ICON);
+            put("Hangouts", CHAT_ICON);
+            put("Messaging", CHAT_ICON);
+            put("Messenger", CHAT_ICON);
+            put("Pushbullet", SNAPCHAT_ICON);
+            put("Skype", CHAT_ICON);
+            put("Slack", CHAT_ICON);
+            put("Snapchat", SNAPCHAT_ICON);
+        }
+    };
 }

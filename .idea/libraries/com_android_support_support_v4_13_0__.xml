@@ -1,0 +1,8 @@
+<component name="libraryTable">
+  <library name="com.android.support:support-v4:13.0.+" type="repository">
+    <properties maven-id="com.google.android:support-v4:r7" />
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

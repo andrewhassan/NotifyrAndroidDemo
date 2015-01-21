@@ -30,13 +30,10 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Created by Applepie on 11/16/2014.
  */
 public class BLEService extends Service {
-    private boolean mForeground = false;
-    private boolean mStarted = false;
 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mDevice;
-    private BluetoothGatt mBluetoothGatt;
 
     private final Object mLock = new Object();
     private Queue<byte[]> mQueue = new LinkedBlockingDeque<byte[]>();
@@ -111,8 +108,6 @@ public class BLEService extends Service {
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            Log.i(Constants.TAG, characteristic.getUuid().toString());
-
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 writeQueue(gatt);
             } else {

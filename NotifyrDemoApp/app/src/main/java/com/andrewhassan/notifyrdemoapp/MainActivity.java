@@ -50,22 +50,28 @@ public class MainActivity extends Activity {
 
         ByteBuffer buf = ByteBuffer.allocate(1024);
         byte outputValue[];
+        ByteBuffer titleBuf = ByteBuffer.allocate(40);
         EditText text_area = (EditText) this.findViewById(R.id.editText);
         String str = text_area.getText().toString();
         // Clear text area
         text_area.setText("");
-        if (str.length() > 200) {
-            str = str.substring(0, 200) + "...";
+        if (str.length() > 211) {
+            str = str.substring(0, 211) + "...";
         }
         //create byte string
         buf.put((byte) 0x01);
+        buf.put((byte) Constants.CHAT_ICON);
+        titleBuf.put("Notifyr".getBytes());
+        for (int i = 0; i < 40 - ("Notifyr".length()); i++) {
+            titleBuf.put((byte) 1);
+        }
+        buf.put(titleBuf.array());
         buf.put(str.getBytes());
         outputValue = buf.array();
-
         Intent msgIntent = new Intent();
         msgIntent.setAction(Constants.NOTIFYR_NOTIFICATION);
         msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, outputValue);
-        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, str.length() + 1);
+        msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, 42 + str.length());
 
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
     }
