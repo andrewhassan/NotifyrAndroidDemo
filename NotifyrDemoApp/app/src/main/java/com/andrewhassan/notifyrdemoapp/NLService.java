@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
@@ -54,13 +53,13 @@ public class NLService extends NotificationListenerService{
 
                 msg = Normalizer.normalize(msg, Normalizer.Form.NFD);
                 msg = new String(msg.getBytes("ascii"), "ascii");
-                if (msg.length() > 211) {
-                    msg = msg.substring(0, 211) + "...";
-                }
+
             } catch (UnsupportedEncodingException e) {
                 return;
             }
-
+            if (msg.length() > 211) {
+                msg = (msg.substring(0, 211) + "...");
+            }
             Log.i(Constants.TAG, "Writing msg " + msg + "to " + address);
             buf.put((byte) 0x01);
             buf.put((byte) type);
@@ -77,7 +76,7 @@ public class NLService extends NotificationListenerService{
             msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, msgTextFinal);
             msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, 1 + 40 + msg.length() + 1);
 
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
+            getApplicationContext().sendBroadcast(msgIntent);
         }
     }
 

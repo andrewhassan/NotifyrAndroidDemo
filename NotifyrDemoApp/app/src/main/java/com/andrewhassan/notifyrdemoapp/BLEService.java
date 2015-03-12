@@ -19,7 +19,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.IBinder;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -202,7 +201,7 @@ public class BLEService extends Service {
                 mBluetoothAdapter = mBluetoothManager.getAdapter();
                 mDevice = mBluetoothAdapter.getRemoteDevice(prefs.getString(Constants.STORED_ADDRESS, ""));
 
-                LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mMessageReceiver, new IntentFilter(Constants.NOTIFYR_NOTIFICATION));
+                getApplicationContext().registerReceiver(mMessageReceiver, new IntentFilter(Constants.NOTIFYR_NOTIFICATION));
             } else {
                 stopSelf();
             }
@@ -210,11 +209,11 @@ public class BLEService extends Service {
         } else if (intent.getAction().equals(
                 Constants.NOTIFYR_STOP_BLE_SERVICE)) {
             Log.i(Constants.TAG, "Received Stop Foreground Intent");
-            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mMessageReceiver);
+            getApplicationContext().unregisterReceiver(mMessageReceiver);
             stopForeground(true);
             stopSelf();
         } else {
-            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mMessageReceiver);
+            getApplicationContext().unregisterReceiver(mMessageReceiver);
             stopSelf();
         }
         return START_NOT_STICKY;

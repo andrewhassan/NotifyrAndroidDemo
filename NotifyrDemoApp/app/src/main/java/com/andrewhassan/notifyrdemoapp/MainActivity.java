@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
         msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG, outputValue);
         msgIntent.putExtra(Constants.NOTIFYR_NOTIFICATION_MSG_LENGTH, outputValue.length);
 
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgIntent);
+        getApplicationContext().sendBroadcast(msgIntent);
 
     }
 

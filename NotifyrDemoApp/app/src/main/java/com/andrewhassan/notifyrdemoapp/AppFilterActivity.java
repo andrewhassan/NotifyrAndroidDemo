@@ -145,6 +145,7 @@ public class AppFilterActivity extends Activity {
                 mViewHolder.mAppName = (TextView) convertView.findViewById(R.id.textView);
                 mViewHolder.mIcons = (ImageView) convertView.findViewById(R.id.icon);
                 convertView.setTag(mViewHolder);
+                convertView.setBackgroundColor((int) Math.random());
             } else {
                 mViewHolder = (ViewHolder) convertView.getTag();
             }
